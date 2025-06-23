@@ -1336,6 +1336,45 @@ document.getElementById('export-pdf-btn').addEventListener('click', () => {
   }
 </script>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm"></script>
+<script>
+  const PROJECT_URL = 'https://esoroklezkjezsflhyfx.supabase.co';
+  const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFz...（你的完整 key）';
+  const supabase = supabase.createClient(PROJECT_URL, ANON_KEY);
+
+  async function saveToSupabase() {
+    const { error } = await supabase.from('seat_assignments').upsert({
+      data: appData,
+      updated_at: new Date().toISOString()
+    });
+    if (error) console.error('Supabase保存错误', error);
+  }
+
+  async function loadFromSupabase() {
+    const { data, error } = await supabase.from('seat_assignments')
+      .select('*').order('updated_at', { ascending: false }).limit(1);
+    if (error) {
+      console.error('Supabase读取错误', error);
+    } else if (data && data.length > 0) {
+      Object.assign(appData, data[0].data);
+      renderGroupTabs();
+      renderPersonList();
+      renderSeatMap();
+      updateCounter();
+    }
+  }
+
+  // 替换原有的本地存储逻辑
+  function saveToLocalStorage() {
+    localStorage.setItem('seatMapAppData', JSON.stringify(appData));
+    saveToSupabase(); // ✅ 添加这一行将数据写入云端
+  }
+
+  function loadFromLocalStorage() {
+    loadFromSupabase(); // ✅ 加载最新数据
+  }
+</script>
+
 
 </body>
 </html>
