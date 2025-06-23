@@ -1,40 +1,1301 @@
-
 <!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-  <meta charset="UTF-8" />
-  <title>座位表系统</title>
-  <style>
-    .seat-map-panel { padding: 20px; background: #f0f0f0; }
-    .button { padding: 6px 12px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; }
-  </style>
+<!-- saved from url=(0159)file:///Users/seanleyang/Downloads/%E9%83%A8%E9%97%A8%E5%BA%A7%E4%BD%8D%E8%A1%A8%E7%AE%A1%E7%90%86%E7%B3%BB%E7%BB%9F_%E9%BB%84%E9%87%91%E7%89%88%20v250618.html -->
+<html lang="zh-CN"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>部门座位表管理系统</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .panel {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 15px;
+        }
+        .seat-map-panel {
+            flex: 2;
+        }
+        .personnel-panel {
+            flex: 1;
+        }
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        h2 {
+            margin: 0;
+            color: #333;
+        }
+        .group-tabs {
+            display: flex;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #ddd;
+            flex-wrap: wrap;
+        }
+        .group-tab {
+            padding: 8px 15px;
+            cursor: pointer;
+            background-color: #f0f0f0;
+            border: 1px solid #ddd;
+            border-bottom: none;
+            border-radius: 5px 5px 0 0;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            position: relative;
+        }
+        .group-tab.active {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .group-tab:hover:not(.active) {
+            background-color: #e0e0e0;
+        }
+        .edit-group {
+            margin-left: 8px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .person-list {
+            min-height: 300px;
+            max-height: 500px;
+            overflow-y: auto;
+            border: 1px dashed #ccc;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #fafafa;
+        }
+        .person-item {
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 4px;
+            cursor: move;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .person-item.unassigned {
+            border-left: 4px solid #ffc107;
+        }
+        .person-item.assigned {
+            opacity: 0.6;
+        }
+        /* 分组颜色样式 */
+        .person-item.brand-group {
+            background-color: #ffe0b2; /* 橙色 */
+            border-left: 4px solid #fb8c00;
+            color: #5d4037; /* 深棕色文字保证可读性 */
+        }
+        .person-item.ecommerce-group {
+            background-color: #bbdefb; /* 蓝色 */
+            border-left: 4px solid #1976d2;
+            color: #0d47a1; /* 深蓝色文字保证可读性 */
+        }
+        .person-item.package-group {
+            background-color: #c8e6c9; /* 绿色 */
+            border-left: 4px solid #388e3c;
+            color: #1b5e20; /* 深绿色文字保证可读性 */
+        }
+        .person-item.vision-group {
+            background-color: #e1bee7; /* 紫色 */
+            border-left: 4px solid #8e24aa;
+            color: #4a148c; /* 深紫色文字保证可读性 */
+        }
+        .person-item.other-group {
+            background-color: #e0e0e0; /* 灰色 */
+            border-left: 4px solid #424242;
+            color: #212121; /* 深灰色文字保证可读性 */
+        }
+        /* 座位颜色样式 - 与人员分组对应 */
+        .seat.brand-seat {
+            background-color: #fff3e0;
+            border-color: #fb8c00;
+        }
+        .seat.ecommerce-seat {
+            background-color: #e3f2fd;
+            border-color: #1976d2;
+        }
+        .seat.package-seat {
+            background-color: #e8f5e9;
+            border-color: #388e3c;
+        }
+        .seat.vision-seat {
+            background-color: #f3e5f5;
+            border-color: #8e24aa;
+        }
+        .seat.other-seat {
+            background-color: #f5f5f5;
+            border-color: #424242;
+        }
+        /* 调整悬停颜色 */
+        .person-item.brand-group:hover {
+            background-color: #ffcc80;
+        }
+        .person-item.ecommerce-group:hover {
+            background-color: #90caf9;
+        }
+        .person-item.package-group:hover {
+            background-color: #a5d6a7;
+        }
+        .person-item.vision-group:hover {
+            background-color: #ce93d8;
+        }
+        .person-item.other-group:hover {
+            background-color: #bdbdbd;
+        }
+        .delete-person {
+            color: #f44336;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        .seat-map {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+        .area-group {
+            border: 2px solid #9e9e9e;
+            border-radius: 8px;
+            padding: 10px;
+            background-color: #f9f9f9;
+        }
+        .area-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+            text-align: center;
+            padding: 5px;
+        }
+        .area-seats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .seat {
+            height: 70px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f5f5f5;
+            cursor: pointer;
+            position: relative;
+        }
+        .seat:hover {
+            background-color: #e0e0e0;
+        }
+        .seat.occupied {
+            border-style: solid;
+        }
+        .seat.empty {
+            border-style: dashed;
+        }
+        .seat-label {
+            font-size: 12px;
+            text-align: center;
+            word-break: break-word;
+            padding: 5px;
+        }
+        .remove-seat {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            font-size: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .seat:hover .remove-seat {
+            opacity: 1;
+        }
+        .button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .button:hover {
+            background-color: #388E3C;
+        }
+        .button.secondary {
+            background-color: #2196F3;
+        }
+        .button.secondary:hover {
+            background-color: #1976D2;
+        }
+        .button.danger {
+            background-color: #f44336;
+        }
+        .button.danger:hover {
+            background-color: #d32f2f;
+        }
+        .input-group {
+            margin-bottom: 10px;
+        }
+        input[type="text"], textarea {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: calc(100% - 18px);
+        }
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        .counter {
+            font-size: 12px;
+            color: #757575;
+            margin-top: 5px;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 500px;
+            max-width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .close-modal {
+            font-size: 24px;
+            cursor: pointer;
+        }
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .batch-add-hint {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
 </head>
 <body>
-  <div class="seat-map-panel">
-    <h2>座位平面图</h2>
-    <div>
-      <button id="reset-btn" class="button danger">重置座位表</button>
-      <button id="export-pdf-btn" class="button" style="margin-left: 10px;">导出 PDF</button>
+    <div class="container">
+        <!-- 座位表区域 -->
+        <div class="panel seat-map-panel">
+            <div class="panel-header">
+                <h2>座位平面图</h2>
+                <div>
+                    <button id="reset-btn" class="button danger">重置座位表</button>
+                    <button id="export-pdf-btn" class="button secondary" style="margin-left: 10px;">导出 PDF</button>
+
+                </div>
+            </div>
+            <div class="seat-map" id="seat-map"><div class="area-group"><div class="area-title">B15组</div><div class="area-seats"><div><div class="seat empty" data-seat-id="110">
+                <div class="seat-label">B15-110</div>
+                
+            </div><div class="seat empty" data-seat-id="111">
+                <div class="seat-label">B15-111</div>
+                
+            </div><div class="seat empty" data-seat-id="112">
+                <div class="seat-label">B15-112</div>
+                
+            </div><div class="seat empty" data-seat-id="113">
+                <div class="seat-label">B15-113</div>
+                
+            </div></div><div><div class="seat empty" data-seat-id="114">
+                <div class="seat-label">B15-114</div>
+                
+            </div><div class="seat empty" data-seat-id="115">
+                <div class="seat-label">B15-115</div>
+                
+            </div><div class="seat empty" data-seat-id="116">
+                <div class="seat-label">B15-116</div>
+                
+            </div><div class="seat empty" data-seat-id="117">
+                <div class="seat-label">B15-117</div>
+                
+            </div></div></div></div><div class="area-group"><div class="area-title">B16组</div><div class="area-seats"><div><div class="seat occupied brand-seat" data-seat-id="118" draggable="true">
+                <div class="seat-label">B16-118<br>龚颜</div>
+                <button class="remove-seat" data-seat-id="118">×</button>
+            </div><div class="seat occupied brand-seat" data-seat-id="119" draggable="true">
+                <div class="seat-label">B16-119<br>施佳巍</div>
+                <button class="remove-seat" data-seat-id="119">×</button>
+            </div><div class="seat occupied package-seat" data-seat-id="120" draggable="true">
+                <div class="seat-label">B16-120<br>王慧君</div>
+                <button class="remove-seat" data-seat-id="120">×</button>
+            </div><div class="seat occupied package-seat" data-seat-id="121" draggable="true">
+                <div class="seat-label">B16-121<br>曾庆恒</div>
+                <button class="remove-seat" data-seat-id="121">×</button>
+            </div></div><div><div class="seat empty" data-seat-id="122">
+                <div class="seat-label">B16-122</div>
+                
+            </div><div class="seat occupied package-seat" data-seat-id="123" draggable="true">
+                <div class="seat-label">B16-123<br>高怡</div>
+                <button class="remove-seat" data-seat-id="123">×</button>
+            </div><div class="seat occupied package-seat" data-seat-id="124" draggable="true">
+                <div class="seat-label">B16-124<br>卢芳兵</div>
+                <button class="remove-seat" data-seat-id="124">×</button>
+            </div><div class="seat occupied package-seat" data-seat-id="125" draggable="true">
+                <div class="seat-label">B16-125<br>郑立帆</div>
+                <button class="remove-seat" data-seat-id="125">×</button>
+            </div></div></div></div><div class="area-group"><div class="area-title">B17组</div><div class="area-seats"><div><div class="seat occupied package-seat" data-seat-id="126" draggable="true">
+                <div class="seat-label">B17-126<br>门玉婷</div>
+                <button class="remove-seat" data-seat-id="126">×</button>
+            </div><div class="seat occupied package-seat" data-seat-id="127" draggable="true">
+                <div class="seat-label">B17-127<br>喻晓林</div>
+                <button class="remove-seat" data-seat-id="127">×</button>
+            </div><div class="seat occupied brand-seat" data-seat-id="128" draggable="true">
+                <div class="seat-label">B17-128<br>*杨嘉怡</div>
+                <button class="remove-seat" data-seat-id="128">×</button>
+            </div><div class="seat occupied brand-seat" data-seat-id="129" draggable="true">
+                <div class="seat-label">B17-129<br>林宛莹</div>
+                <button class="remove-seat" data-seat-id="129">×</button>
+            </div></div><div><div class="seat empty" data-seat-id="130">
+                <div class="seat-label">B17-130</div>
+                
+            </div><div class="seat occupied brand-seat" data-seat-id="131" draggable="true">
+                <div class="seat-label">B17-131<br>王建鑫</div>
+                <button class="remove-seat" data-seat-id="131">×</button>
+            </div><div class="seat occupied brand-seat" data-seat-id="132" draggable="true">
+                <div class="seat-label">B17-132<br>冯巍巍</div>
+                <button class="remove-seat" data-seat-id="132">×</button>
+            </div><div class="seat occupied brand-seat" data-seat-id="133" draggable="true">
+                <div class="seat-label">B17-133<br>姜卜戈</div>
+                <button class="remove-seat" data-seat-id="133">×</button>
+            </div></div></div></div><div class="area-group"><div class="area-title">B18组</div><div class="area-seats"><div><div class="seat occupied package-seat" data-seat-id="134" draggable="true">
+                <div class="seat-label">B18-134<br>*范欣怡（校招）</div>
+                <button class="remove-seat" data-seat-id="134">×</button>
+            </div><div class="seat occupied package-seat" data-seat-id="135" draggable="true">
+                <div class="seat-label">B18-135<br>于杰</div>
+                <button class="remove-seat" data-seat-id="135">×</button>
+            </div><div class="seat occupied package-seat" data-seat-id="136" draggable="true">
+                <div class="seat-label">B18-136<br>魏洁</div>
+                <button class="remove-seat" data-seat-id="136">×</button>
+            </div><div class="seat occupied package-seat" data-seat-id="137" draggable="true">
+                <div class="seat-label">B18-137<br>任军国</div>
+                <button class="remove-seat" data-seat-id="137">×</button>
+            </div></div><div><div class="seat empty" data-seat-id="138">
+                <div class="seat-label">B18-138</div>
+                
+            </div><div class="seat occupied package-seat" data-seat-id="139" draggable="true">
+                <div class="seat-label">B18-139<br>赵雨静</div>
+                <button class="remove-seat" data-seat-id="139">×</button>
+            </div><div class="seat occupied ecommerce-seat" data-seat-id="140" draggable="true">
+                <div class="seat-label">B18-140<br>卢泽慧</div>
+                <button class="remove-seat" data-seat-id="140">×</button>
+            </div><div class="seat occupied vision-seat" data-seat-id="141" draggable="true">
+                <div class="seat-label">B18-141<br>张云峰</div>
+                <button class="remove-seat" data-seat-id="141">×</button>
+            </div><div class="seat occupied vision-seat" data-seat-id="142" draggable="true">
+                <div class="seat-label">B18-142<br>朱宛玉</div>
+                <button class="remove-seat" data-seat-id="142">×</button>
+            </div></div></div></div><div class="area-group"><div class="area-title">B19组</div><div class="area-seats"><div><div class="seat occupied ecommerce-seat" data-seat-id="143" draggable="true">
+                <div class="seat-label">B19-143<br>刘小凤</div>
+                <button class="remove-seat" data-seat-id="143">×</button>
+            </div><div class="seat occupied ecommerce-seat" data-seat-id="144" draggable="true">
+                <div class="seat-label">B19-144<br>潘彧</div>
+                <button class="remove-seat" data-seat-id="144">×</button>
+            </div><div class="seat occupied ecommerce-seat" data-seat-id="145" draggable="true">
+                <div class="seat-label">B19-145<br>麦文静</div>
+                <button class="remove-seat" data-seat-id="145">×</button>
+            </div><div class="seat occupied brand-seat" data-seat-id="146" draggable="true">
+                <div class="seat-label">B19-146<br>施磊</div>
+                <button class="remove-seat" data-seat-id="146">×</button>
+            </div><div class="seat occupied brand-seat" data-seat-id="147" draggable="true">
+                <div class="seat-label">B19-147<br>王雅俊</div>
+                <button class="remove-seat" data-seat-id="147">×</button>
+            </div></div><div><div class="seat occupied ecommerce-seat" data-seat-id="148" draggable="true">
+                <div class="seat-label">B19-148<br>李娟花</div>
+                <button class="remove-seat" data-seat-id="148">×</button>
+            </div><div class="seat occupied brand-seat" data-seat-id="149" draggable="true">
+                <div class="seat-label">B19-149<br>秦宇</div>
+                <button class="remove-seat" data-seat-id="149">×</button>
+            </div><div class="seat occupied brand-seat" data-seat-id="150" draggable="true">
+                <div class="seat-label">B19-150<br>*刘玥琦（校招）</div>
+                <button class="remove-seat" data-seat-id="150">×</button>
+            </div><div class="seat occupied ecommerce-seat" data-seat-id="151" draggable="true">
+                <div class="seat-label">B19-151<br>杨晓青</div>
+                <button class="remove-seat" data-seat-id="151">×</button>
+            </div><div class="seat occupied ecommerce-seat" data-seat-id="152" draggable="true">
+                <div class="seat-label">B19-152<br>王柔桢</div>
+                <button class="remove-seat" data-seat-id="152">×</button>
+            </div></div></div></div><div class="area-group"><div class="area-title">B20组</div><div class="area-seats"><div><div class="seat occupied ecommerce-seat" data-seat-id="153" draggable="true">
+                <div class="seat-label">B20-153<br>杨蓓</div>
+                <button class="remove-seat" data-seat-id="153">×</button>
+            </div><div class="seat occupied ecommerce-seat" data-seat-id="154" draggable="true">
+                <div class="seat-label">B20-154<br>张思敏</div>
+                <button class="remove-seat" data-seat-id="154">×</button>
+            </div><div class="seat occupied ecommerce-seat" data-seat-id="155" draggable="true">
+                <div class="seat-label">B20-155<br>张铁</div>
+                <button class="remove-seat" data-seat-id="155">×</button>
+            </div><div class="seat occupied ecommerce-seat" data-seat-id="156" draggable="true">
+                <div class="seat-label">B20-156<br>段雅茹</div>
+                <button class="remove-seat" data-seat-id="156">×</button>
+            </div><div class="seat occupied ecommerce-seat" data-seat-id="157" draggable="true">
+                <div class="seat-label">B20-157<br>张媛</div>
+                <button class="remove-seat" data-seat-id="157">×</button>
+            </div></div><div><div class="seat occupied other-seat" data-seat-id="158" draggable="true">
+                <div class="seat-label">B20-158<br>徐黎洋</div>
+                <button class="remove-seat" data-seat-id="158">×</button>
+            </div><div class="seat occupied other-seat" data-seat-id="159" draggable="true">
+                <div class="seat-label">B20-159<br>姚美君</div>
+                <button class="remove-seat" data-seat-id="159">×</button>
+            </div><div class="seat occupied brand-seat" data-seat-id="160" draggable="true">
+                <div class="seat-label">B20-160<br>王汐韵</div>
+                <button class="remove-seat" data-seat-id="160">×</button>
+            </div><div class="seat occupied brand-seat" data-seat-id="161" draggable="true">
+                <div class="seat-label">B20-161<br>*檀诗溦（校招）</div>
+                <button class="remove-seat" data-seat-id="161">×</button>
+            </div><div class="seat occupied brand-seat" data-seat-id="162" draggable="true">
+                <div class="seat-label">B20-162<br>黄俊淇</div>
+                <button class="remove-seat" data-seat-id="162">×</button>
+            </div></div></div></div></div>
+        </div>
+        
+        <!-- 人员名单区域 -->
+        <div class="panel personnel-panel">
+            <div class="panel-header">
+                <h2>部门人员</h2>
+                <div>
+                    <button id="batch-add-btn" class="button secondary">批量添加</button>
+                    <button id="add-person-btn" class="button">添加人员</button>
+                </div>
+            </div>
+            
+            <div class="group-tabs" id="group-tabs"><div class="group-tab active" data-group-id="1">
+                    品牌设计组
+                    <span class="edit-group" data-group-id="1">✎</span>
+                </div><div class="group-tab " data-group-id="2">
+                    包装设计组
+                    <span class="edit-group" data-group-id="2">✎</span>
+                </div><div class="group-tab " data-group-id="3">
+                    电商设计组
+                    <span class="edit-group" data-group-id="3">✎</span>
+                </div><div class="group-tab " data-group-id="4">
+                    智能影像组
+                    <span class="edit-group" data-group-id="4">✎</span>
+                </div><div class="group-tab " data-group-id="5">
+                    视觉创意部
+                    <span class="edit-group" data-group-id="5">✎</span>
+                </div></div>
+            
+            <div class="person-list" id="person-list"><div class="person-item assigned brand-group" data-person-id="1750175038298" draggable="true">
+                    施佳巍
+                    <span class="delete-person" data-person-id="1750175038298">×</span>
+                </div><div class="person-item assigned brand-group" data-person-id="1750175037675" draggable="true">
+                    秦宇
+                    <span class="delete-person" data-person-id="1750175037675">×</span>
+                </div><div class="person-item assigned brand-group" data-person-id="1750175037637" draggable="true">
+                    龚颜
+                    <span class="delete-person" data-person-id="1750175037637">×</span>
+                </div><div class="person-item assigned brand-group" data-person-id="1750175037696" draggable="true">
+                    王雅俊
+                    <span class="delete-person" data-person-id="1750175037696">×</span>
+                </div><div class="person-item assigned brand-group" data-person-id="1750175037798" draggable="true">
+                    黄俊淇
+                    <span class="delete-person" data-person-id="1750175037798">×</span>
+                </div><div class="person-item assigned brand-group" data-person-id="1750175038092" draggable="true">
+                    王汐韵
+                    <span class="delete-person" data-person-id="1750175038092">×</span>
+                </div><div class="person-item assigned brand-group" data-person-id="1750175037605" draggable="true">
+                    王建鑫
+                    <span class="delete-person" data-person-id="1750175037605">×</span>
+                </div><div class="person-item assigned brand-group" data-person-id="1750175038087" draggable="true">
+                    林宛莹
+                    <span class="delete-person" data-person-id="1750175038087">×</span>
+                </div><div class="person-item assigned brand-group" data-person-id="1750175037999" draggable="true">
+                    姜卜戈
+                    <span class="delete-person" data-person-id="1750175037999">×</span>
+                </div><div class="person-item unassigned brand-group" data-person-id="1750175037886" draggable="true">
+                    *待招设计专家
+                    <span class="delete-person" data-person-id="1750175037886">×</span>
+                </div><div class="person-item assigned brand-group" data-person-id="1750175038499" draggable="true">
+                    *刘玥琦（校招）
+                    <span class="delete-person" data-person-id="1750175038499">×</span>
+                </div><div class="person-item assigned brand-group" data-person-id="1750175038148" draggable="true">
+                    *檀诗溦（校招）
+                    <span class="delete-person" data-person-id="1750175038148">×</span>
+                </div><div class="person-item assigned brand-group" data-person-id="1750175038090" draggable="true">
+                    *杨嘉怡
+                    <span class="delete-person" data-person-id="1750175038090">×</span>
+                </div><div class="person-item assigned brand-group" data-person-id="1750227180333" draggable="true">
+                    冯巍巍
+                    <span class="delete-person" data-person-id="1750227180333">×</span>
+                </div><div class="person-item assigned brand-group" data-person-id="1750227198229" draggable="true">
+                    施磊
+                    <span class="delete-person" data-person-id="1750227198229">×</span>
+                </div></div>
+            
+            <div class="counter" id="person-counter">总人数: 15 | 未分配: 1</div>
+        </div>
     </div>
-    <div style="margin-top:20px">这里是座位图内容（示例）</div>
-  </div>
+    
+    <!-- 添加人员模态框 -->
+    <div class="modal" id="add-person-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>添加新人员</h3>
+                <span class="close-modal">×</span>
+            </div>
+            <div class="input-group">
+                <label for="person-name">姓名</label>
+                <input type="text" id="person-name" placeholder="输入人员姓名">
+            </div>
+            <div class="input-group">
+                <label for="person-group">分组</label>
+                <select id="person-group" class="input-group">
+                    <!-- 分组选项将通过JS动态生成 -->
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button class="button" id="save-person-btn">保存</button>
+                <button class="button secondary close-modal">取消</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 批量添加人员模态框 -->
+    <div class="modal" id="batch-add-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>批量添加人员</h3>
+                <span class="close-modal">×</span>
+            </div>
+            <div class="input-group">
+                <label for="batch-group">分组</label>
+                <select id="batch-group" class="input-group">
+                    <!-- 分组选项将通过JS动态生成 -->
+                </select>
+            </div>
+            <div class="input-group">
+                <label for="batch-names">人员名单（每行一个姓名）</label>
+                <textarea id="batch-names" placeholder="请输入人员姓名，每行一个"></textarea>
+                <div class="batch-add-hint">提示：每行输入一个姓名，系统会自动创建对应人员</div>
+            </div>
+            <div class="modal-footer">
+                <button class="button" id="save-batch-btn">批量添加</button>
+                <button class="button secondary close-modal">取消</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 编辑分组模态框 -->
+    <div class="modal" id="edit-group-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>编辑分组名称</h3>
+                <span class="close-modal">×</span>
+            </div>
+            <div class="input-group">
+                <label for="edit-group-name">分组名称</label>
+                <input type="text" id="edit-group-name" placeholder="输入分组名称">
+                <input type="hidden" id="edit-group-id">
+            </div>
+            <div class="modal-footer">
+                <button class="button" id="save-edit-group-btn">保存</button>
+                <button class="button secondary close-modal">取消</button>
+            </div>
+        </div>
+    </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  <script>
-    document.getElementById('export-pdf-btn').addEventListener('click', () => {
-        const seatMap = document.querySelector('.seat-map-panel');
-        const today = new Date().toISOString().slice(0, 10); // yyyy-mm-dd
-
-        const opt = {
-            margin: 0.5,
-            filename: `SeatMap_${today}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true },
-            jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+    <script>
+        // 初始数据
+        let appData = {
+            groups: [
+                { id: 1, name: '品牌设计组' },
+                { id: 2, name: '包装设计组' },
+                { id: 3, name: '电商设计组' },
+                { id: 4, name: '智能影像组' },
+                { id: 5, name: '视觉创意部' }
+            ],
+            people: [
+                // 初始可以留空，或添加一些示例人员
+            ],
+            seats: [
+                // B15区域
+                { id: 110, label: '110', personId: null },
+                { id: 111, label: '111', personId: null },
+                { id: 112, label: '112', personId: null },
+                { id: 113, label: '113', personId: null },
+                { id: 114, label: '114', personId: null },
+                { id: 115, label: '115', personId: null },
+                { id: 116, label: '116', personId: null },
+                { id: 117, label: '117', personId: null },
+                
+                // B16区域
+                { id: 118, label: '118', personId: null },
+                { id: 119, label: '119', personId: null },
+                { id: 120, label: '120', personId: null },
+                { id: 121, label: '121', personId: null },
+                { id: 122, label: '122', personId: null },
+                { id: 123, label: '123', personId: null },
+                { id: 124, label: '124', personId: null },
+                { id: 125, label: '125', personId: null },
+                
+                // B17区域
+                { id: 126, label: '126', personId: null },
+                { id: 127, label: '127', personId: null },
+                { id: 128, label: '128', personId: null },
+                { id: 129, label: '129', personId: null },
+                { id: 130, label: '130', personId: null },
+                { id: 131, label: '131', personId: null },
+                { id: 132, label: '132', personId: null },
+                { id: 133, label: '133', personId: null },
+                
+                // B18区域
+                { id: 134, label: '134', personId: null },
+                { id: 135, label: '135', personId: null },
+                { id: 136, label: '136', personId: null },
+                { id: 137, label: '137', personId: null },
+                { id: 138, label: '138', personId: null },
+                { id: 139, label: '139', personId: null },
+                { id: 140, label: '140', personId: null },
+                { id: 141, label: '141', personId: null },
+                { id: 142, label: '142', personId: null },
+                
+                // B19区域
+                { id: 143, label: '143', personId: null },
+                { id: 144, label: '144', personId: null },
+                { id: 145, label: '145', personId: null },
+                { id: 146, label: '146', personId: null },
+                { id: 147, label: '147', personId: null },
+                { id: 148, label: '148', personId: null },
+                { id: 149, label: '149', personId: null },
+                { id: 150, label: '150', personId: null },
+                { id: 151, label: '151', personId: null },
+                { id: 152, label: '152', personId: null },
+                
+                // B20区域
+                { id: 153, label: '153', personId: null },
+                { id: 154, label: '154', personId: null },
+                { id: 155, label: '155', personId: null },
+                { id: 156, label: '156', personId: null },
+                { id: 157, label: '157', personId: null },
+                { id: 158, label: '158', personId: null },
+                { id: 159, label: '159', personId: null },
+                { id: 160, label: '160', personId: null },
+                { id: 161, label: '161', personId: null },
+                { id: 162, label: '162', personId: null }
+            ],
+            currentGroup: 1
         };
 
-        html2pdf().set(opt).from(seatMap).save();
-    });
-  </script>
+        // DOM元素
+        const elements = {
+            groupTabs: document.getElementById('group-tabs'),
+            personList: document.getElementById('person-list'),
+            seatMap: document.getElementById('seat-map'),
+            personCounter: document.getElementById('person-counter'),
+            addPersonModal: document.getElementById('add-person-modal'),
+            batchAddModal: document.getElementById('batch-add-modal'),
+            editGroupModal: document.getElementById('edit-group-modal'),
+            personNameInput: document.getElementById('person-name'),
+            personGroupSelect: document.getElementById('person-group'),
+            batchGroupSelect: document.getElementById('batch-group'),
+            batchNamesInput: document.getElementById('batch-names'),
+            editGroupNameInput: document.getElementById('edit-group-name'),
+            editGroupIdInput: document.getElementById('edit-group-id')
+        };
+
+        // 初始化应用
+        function initApp() {
+            renderGroupTabs();
+            renderPersonList();
+            renderSeatMap();
+            updateCounter();
+            setupEventListeners();
+            
+            // 尝试从本地存储加载数据
+            loadFromLocalStorage();
+        }
+
+        // 设置事件监听器
+        function setupEventListeners() {
+            // 添加人员按钮
+            document.getElementById('add-person-btn').addEventListener('click', () => {
+                elements.personNameInput.value = '';
+                populateGroupSelect(elements.personGroupSelect);
+                elements.addPersonModal.style.display = 'flex';
+            });
+
+            // 批量添加按钮
+            document.getElementById('batch-add-btn').addEventListener('click', () => {
+                elements.batchNamesInput.value = '';
+                populateGroupSelect(elements.batchGroupSelect);
+                elements.batchAddModal.style.display = 'flex';
+            });
+
+            // 重置座位表按钮
+            document.getElementById('reset-btn').addEventListener('click', resetSeatMap);
+
+            // 保存人员按钮
+            document.getElementById('save-person-btn').addEventListener('click', savePerson);
+
+            // 批量保存人员按钮
+            document.getElementById('save-batch-btn').addEventListener('click', saveBatchPersons);
+
+            // 保存分组编辑按钮
+            document.getElementById('save-edit-group-btn').addEventListener('click', saveGroupEdit);
+
+            // 关闭模态框按钮
+            document.querySelectorAll('.close-modal').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.modal').forEach(modal => {
+                        modal.style.display = 'none';
+                    });
+                });
+            });
+
+            // 点击模态框外部关闭
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        modal.style.display = 'none';
+                    }
+                });
+            });
+        }
+
+        // 渲染分组标签
+        function renderGroupTabs() {
+            elements.groupTabs.innerHTML = '';
+            
+            appData.groups.forEach(group => {
+                const tab = document.createElement('div');
+                tab.className = `group-tab ${group.id === appData.currentGroup ? 'active' : ''}`;
+                tab.innerHTML = `
+                    ${group.name}
+                    <span class="edit-group" data-group-id="${group.id}">✎</span>
+                `;
+                tab.dataset.groupId = group.id;
+                
+                tab.addEventListener('click', (e) => {
+                    // 防止点击编辑图标时切换分组
+                    if (!e.target.classList.contains('edit-group')) {
+                        appData.currentGroup = group.id;
+                        renderGroupTabs();
+                        renderPersonList();
+                        updateCounter();
+                    }
+                });
+                
+                // 编辑分组名称
+                tab.querySelector('.edit-group').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    editGroup(group.id);
+                });
+                
+                elements.groupTabs.appendChild(tab);
+            });
+        }
+
+        // 编辑分组
+        function editGroup(groupId) {
+            const group = appData.groups.find(g => g.id === groupId);
+            if (group) {
+                elements.editGroupNameInput.value = group.name;
+                elements.editGroupIdInput.value = groupId;
+                elements.editGroupModal.style.display = 'flex';
+            }
+        }
+
+        // 保存分组编辑
+        function saveGroupEdit() {
+            const groupId = parseInt(elements.editGroupIdInput.value);
+            const newName = elements.editGroupNameInput.value.trim();
+            
+            if (!newName) {
+                alert('请输入分组名称');
+                return;
+            }
+            
+            const group = appData.groups.find(g => g.id === groupId);
+            if (group) {
+                group.name = newName;
+                saveToLocalStorage();
+                renderGroupTabs();
+                elements.editGroupModal.style.display = 'none';
+            }
+        }
+
+        // 渲染人员列表
+        function renderPersonList() {
+            elements.personList.innerHTML = '';
+            
+            const currentGroupPeople = appData.people.filter(
+                person => person.groupId === appData.currentGroup
+            );
+            
+            if (currentGroupPeople.length === 0) {
+                const emptyMsg = document.createElement('div');
+                emptyMsg.textContent = '该分组暂无人员';
+                emptyMsg.style.textAlign = 'center';
+                emptyMsg.style.padding = '20px';
+                emptyMsg.style.color = '#999';
+                elements.personList.appendChild(emptyMsg);
+                return;
+            }
+            
+            currentGroupPeople.forEach(person => {
+                const personItem = document.createElement('div');
+                personItem.className = `person-item ${person.assigned ? 'assigned' : 'unassigned'}`;
+                personItem.dataset.personId = person.id;
+                personItem.draggable = true;
+                
+                // 根据分组添加不同的颜色类
+                const group = appData.groups.find(g => g.id === person.groupId);
+                if (group) {
+                    if (group.name.includes('品牌设计')) {
+                        personItem.classList.add('brand-group');
+                    } else if (group.name.includes('电商设计')) {
+                        personItem.classList.add('ecommerce-group');
+                    } else if (group.name.includes('包装设计')) {
+                        personItem.classList.add('package-group');
+                    } else if (group.name.includes('智能影像') || group.name.includes('智能视觉')) {
+                        personItem.classList.add('vision-group');
+                    } else {
+                        personItem.classList.add('other-group');
+                    }
+                }
+                
+                personItem.innerHTML = `
+                    ${person.name}
+                    <span class="delete-person" data-person-id="${person.id}">×</span>
+                `;
+                
+                // 拖拽开始
+                personItem.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', person.id);
+                    setTimeout(() => {
+                        personItem.style.opacity = '0.4';
+                    }, 0);
+                });
+                
+                // 拖拽结束
+                personItem.addEventListener('dragend', () => {
+                    personItem.style.opacity = '1';
+                });
+                
+                // 删除人员
+                personItem.querySelector('.delete-person').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    deletePerson(person.id);
+                });
+                
+                elements.personList.appendChild(personItem);
+            });
+        }
+
+        // 渲染座位表
+        function renderSeatMap() {
+            elements.seatMap.innerHTML = '';
+            
+            // 第一行：B15, B16, B17
+            createAreaGroup('B15', [110, 111, 112, 113], [114, 115, 116, 117]);
+            createAreaGroup('B16', [118, 119, 120, 121], [122, 123, 124, 125]);
+            createAreaGroup('B17', [126, 127, 128, 129], [130, 131, 132, 133]);
+            
+            // 第二行：B18, B19, B20
+            createAreaGroup('B18', [134, 135, 136, 137], [138, 139, 140, 141, 142]);
+            createAreaGroup('B19', [143, 144, 145, 146, 147], [148, 149, 150, 151, 152]);
+            createAreaGroup('B20', [153, 154, 155, 156, 157], [158, 159, 160, 161, 162]);
+        }
+
+        // 创建区域组
+        function createAreaGroup(groupName, leftSeats, rightSeats) {
+            const group = document.createElement('div');
+            group.className = 'area-group';
+            
+            const title = document.createElement('div');
+            title.className = 'area-title';
+            title.textContent = groupName + '组';
+            group.appendChild(title);
+            
+            const seatsContainer = document.createElement('div');
+            seatsContainer.className = 'area-seats';
+            
+            // 左列座位
+            const leftColumn = document.createElement('div');
+            leftSeats.forEach(seatId => {
+                const seat = appData.seats.find(s => s.id === seatId);
+                if (seat) leftColumn.appendChild(createSeatElement(seat));
+            });
+            seatsContainer.appendChild(leftColumn);
+            
+            // 右列座位
+            const rightColumn = document.createElement('div');
+            rightSeats.forEach(seatId => {
+                const seat = appData.seats.find(s => s.id === seatId);
+                if (seat) rightColumn.appendChild(createSeatElement(seat));
+            });
+            seatsContainer.appendChild(rightColumn);
+            
+            group.appendChild(seatsContainer);
+            elements.seatMap.appendChild(group);
+        }
+
+        // 创建座位元素
+        function createSeatElement(seat) {
+            const seatElement = document.createElement('div');
+            const person = seat.personId ? appData.people.find(p => p.id === seat.personId) : null;
+            const group = person ? appData.groups.find(g => g.id === person.groupId) : null;
+            
+            seatElement.className = `seat ${seat.personId ? 'occupied' : 'empty'}`;
+            seatElement.dataset.seatId = seat.id;
+            
+            // 根据人员分组添加对应的颜色类
+            if (person && group) {
+                if (group.name.includes('品牌设计')) {
+                    seatElement.classList.add('brand-seat');
+                } else if (group.name.includes('电商设计')) {
+                    seatElement.classList.add('ecommerce-seat');
+                } else if (group.name.includes('包装设计')) {
+                    seatElement.classList.add('package-seat');
+                } else if (group.name.includes('智能影像') || group.name.includes('智能视觉')) {
+                    seatElement.classList.add('vision-seat');
+                } else {
+                    seatElement.classList.add('other-seat');
+                }
+            }
+            
+            seatElement.innerHTML = `
+                <div class="seat-label">${seat.label}${person ? `<br>${person.name}` : ''}</div>
+                ${seat.personId ? '<button class="remove-seat" data-seat-id="' + seat.id + '">×</button>' : ''}
+            `;
+            
+            // 拖拽放置
+            seatElement.addEventListener('dragover', (e) => {
+                e.preventDefault();
+            });
+            
+            seatElement.addEventListener('dragenter', (e) => {
+                e.preventDefault();
+                if (!seat.personId) {
+                    seatElement.style.backgroundColor = '#bbdefb';
+                }
+            });
+            
+            seatElement.addEventListener('dragleave', () => {
+                if (!seat.personId) {
+                    seatElement.style.backgroundColor = '';
+                }
+            });
+            
+            seatElement.addEventListener('drop', (e) => {
+                e.preventDefault();
+                if (!seat.personId) {
+                    seatElement.style.backgroundColor = '';
+                    const personId = parseInt(e.dataTransfer.getData('text/plain'));
+                    assignPersonToSeat(personId, seat.id);
+                }
+            });
+            
+            // 如果座位已占用，使其可拖动
+            if (seat.personId) {
+                seatElement.draggable = true;
+                
+                seatElement.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', `move:${seat.id}`);
+                    setTimeout(() => {
+                        seatElement.style.opacity = '0.4';
+                    }, 0);
+                });
+                
+                seatElement.addEventListener('dragend', () => {
+                    seatElement.style.opacity = '1';
+                });
+            }
+            
+            // 点击移除人员
+            if (seat.personId) {
+                seatElement.querySelector('.remove-seat').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    unassignPersonFromSeat(seat.id);
+                });
+            }
+            
+            return seatElement;
+        }
+
+        // 更新计数器
+        function updateCounter() {
+            const totalPeople = appData.people.filter(
+                person => person.groupId === appData.currentGroup
+            ).length;
+            
+            const unassignedPeople = appData.people.filter(
+                person => person.groupId === appData.currentGroup && !person.assigned
+            ).length;
+            
+            elements.personCounter.textContent = `总人数: ${totalPeople} | 未分配: ${unassignedPeople}`;
+        }
+
+        // 填充分组选择下拉框
+        function populateGroupSelect(selectElement) {
+            selectElement.innerHTML = '';
+            
+            appData.groups.forEach(group => {
+                const option = document.createElement('option');
+                option.value = group.id;
+                option.textContent = group.name;
+                selectElement.appendChild(option);
+            });
+        }
+
+        // 保存人员
+        function savePerson() {
+            const name = elements.personNameInput.value.trim();
+            const groupId = parseInt(elements.personGroupSelect.value);
+            
+            if (!name) {
+                alert('请输入人员姓名');
+                return;
+            }
+            
+            const newPerson = {
+                id: Date.now(), // 使用时间戳作为临时ID
+                name,
+                groupId,
+                assigned: false
+            };
+            
+            appData.people.push(newPerson);
+            saveToLocalStorage();
+            
+            if (groupId === appData.currentGroup) {
+                renderPersonList();
+            }
+            
+            updateCounter();
+            elements.addPersonModal.style.display = 'none';
+        }
+
+        // 批量保存人员
+        function saveBatchPersons() {
+            const groupId = parseInt(elements.batchGroupSelect.value);
+            const namesText = elements.batchNamesInput.value.trim();
+            
+            if (!namesText) {
+                alert('请输入人员名单');
+                return;
+            }
+            
+            const names = namesText.split('\n')
+                .map(name => name.trim())
+                .filter(name => name.length > 0);
+            
+            if (names.length === 0) {
+                alert('请输入有效的人员名单');
+                return;
+            }
+            
+            const newPeople = names.map(name => ({
+                id: Date.now() + Math.floor(Math.random() * 1000), // 生成唯一ID
+                name,
+                groupId,
+                assigned: false
+            }));
+            
+            appData.people = [...appData.people, ...newPeople];
+            saveToLocalStorage();
+            
+            if (groupId === appData.currentGroup) {
+                renderPersonList();
+            }
+            
+            updateCounter();
+            elements.batchAddModal.style.display = 'none';
+        }
+
+        // 删除人员
+        function deletePerson(personId) {
+            if (confirm('确定要删除此人员吗？')) {
+                // 如果人员已被分配到座位，先解除分配
+                const seatIndex = appData.seats.findIndex(seat => seat.personId === personId);
+                if (seatIndex !== -1) {
+                    appData.seats[seatIndex].personId = null;
+                }
+                
+                // 删除人员
+                appData.people = appData.people.filter(person => person.id !== personId);
+                saveToLocalStorage();
+                
+                renderPersonList();
+                renderSeatMap();
+                updateCounter();
+            }
+        }
+
+        // 分配人员到座位
+        function assignPersonToSeat(personId, seatId) {
+            // 如果座位已有人员，先解除分配
+            const seat = appData.seats.find(s => s.id === seatId);
+            if (seat.personId) {
+                const person = appData.people.find(p => p.id === seat.personId);
+                if (person) {
+                    person.assigned = false;
+                }
+            }
+            
+            // 分配新人员
+            seat.personId = personId;
+            const person = appData.people.find(p => p.id === personId);
+            if (person) {
+                person.assigned = true;
+            }
+            
+            saveToLocalStorage();
+            renderPersonList();
+            renderSeatMap();
+            updateCounter();
+        }
+
+        // 从座位解除人员分配
+        function unassignPersonFromSeat(seatId) {
+            const seat = appData.seats.find(s => s.id === seatId);
+            if (!seat || !seat.personId) return;
+            
+            const person = appData.people.find(p => p.id === seat.personId);
+            if (person) {
+                person.assigned = false;
+            }
+            
+            seat.personId = null;
+            saveToLocalStorage();
+            renderPersonList();
+            renderSeatMap();
+            updateCounter();
+        }
+
+        // 重置座位表
+        function resetSeatMap() {
+            if (confirm('确定要重置座位表吗？这将解除所有人员的座位分配。')) {
+                appData.seats.forEach(seat => {
+                    if (seat.personId) {
+                        const person = appData.people.find(p => p.id === seat.personId);
+                        if (person) {
+                            person.assigned = false;
+                        }
+                        seat.personId = null;
+                    }
+                });
+                
+                saveToLocalStorage();
+                renderPersonList();
+                renderSeatMap();
+                updateCounter();
+            }
+        }
+
+        // 保存到本地存储
+        function saveToLocalStorage() {
+            localStorage.setItem('seatMapAppData', JSON.stringify(appData));
+        }
+
+        // 从本地存储加载
+        function loadFromLocalStorage() {
+            const savedData = localStorage.getItem('seatMapAppData');
+            if (savedData) {
+                appData = JSON.parse(savedData);
+                renderGroupTabs();
+                renderPersonList();
+                renderSeatMap();
+                updateCounter();
+            }
+        }
+
+        // 初始化应用
+        window.addEventListener('DOMContentLoaded', () => {
+            initApp();
+            
+            // 为座位图添加拖放功能
+            document.addEventListener('dragover', (e) => {
+                e.preventDefault();
+            });
+            
+            document.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const data = e.dataTransfer.getData('text/plain');
+                
+                // 如果是移动座位中的人员
+                if (data.startsWith('move:')) {
+                    const seatId = parseInt(data.split(':')[1]);
+                    const seat = appData.seats.find(s => s.id === seatId);
+                    
+                    // 检查是否放置在了另一个座位上
+                    const targetSeatElement = e.target.closest('.seat');
+                    if (targetSeatElement && seatId !== parseInt(targetSeatElement.dataset.seatId)) {
+                        const targetSeatId = parseInt(targetSeatElement.dataset.seatId);
+                        const targetSeat = appData.seats.find(s => s.id === targetSeatId);
+                        
+                        if (targetSeat && !targetSeat.personId) {
+                            // 移动人员到新座位
+                            const personId = seat.personId;
+                            unassignPersonFromSeat(seatId);
+                            assignPersonToSeat(personId, targetSeatId);
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>
+document.getElementById('export-pdf-btn').addEventListener('click', () => {
+    const seatMap = document.querySelector('.seat-map-panel');
+    const today = new Date().toISOString().slice(0, 10);
+
+    const opt = {
+        margin: 0.5,
+        filename: `SeatMap_${today}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+    };
+
+    html2pdf().set(opt).from(seatMap).save();
+});
+</script>
 </body>
 </html>
