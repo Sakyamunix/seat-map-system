@@ -1233,8 +1233,14 @@
         }
 
         // 从本地存储加载
-        function loadFromLocalStorage() {
-            const savedData = localStorage.getItem('seatMapAppData');
+        async function loadFromLocalStorage() {
+  const { data, error } = await supabase.from('seat_assignments')
+    .select('*').order('updated_at', { ascending: false }).limit(1);
+  if (data && data.length > 0) {
+    Object.assign(appData, data[0].data);
+  }
+}
+
             if (savedData) {
                 appData = JSON.parse(savedData);
                 renderGroupTabs();
